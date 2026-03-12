@@ -6,7 +6,7 @@ HOST = "localhost"
 PORT = 6767
 player_amount = 2   # default to 2 players per connection
 
-for i in len(argv)-1:
+for i in range(len(argv)-1):
     if argv[i] == "--player-amount":
         player_amount == argv[i+1]
 
