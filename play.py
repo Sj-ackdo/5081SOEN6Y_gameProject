@@ -1,6 +1,6 @@
 from sys import argv
 
-for i in len(argv)-1:
+for i in range(len(argv)-1):
     if argv[i] == "--name":
         client_name = argv[i+1]
     if argv[i] == "--password":
