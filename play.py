@@ -3,7 +3,7 @@ from sys import argv
 for i in len(argv)-1:
     if argv[i] == "--name":
         client_name = argv[i+1]
-    if argv[i] == "--password"
+    if argv[i] == "--password":
         server_password = argv[i+1] # password implementation
 
 
