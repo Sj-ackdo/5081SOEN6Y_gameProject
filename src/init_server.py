@@ -1,6 +1,6 @@
-import socket
 from sys import argv
 import pickle
+import socket
 
 HOST = "localhost"
 PORT = 6767
@@ -29,7 +29,33 @@ for i in range(player_amount):
 # main server loop
 running = True
 while running:
-    pass    # game implementation
+    try:    # temp implementation
+        for i, client in enumerate(clients):
+            try:
+                client.settimeout(0.01)
+                data = client.recv(1024).decode()
+                if not data:
+                    break
+
+                # put data logic here
+
+            except socket.timeout:
+                pass
+
+            except ConnectionResetError:
+                printf(f"Player {i} disconnected")
+                running = False
+                break
+        game_state = pickle.dumps(players)
+        for client in clients:
+            try:
+                client.sendall(game_state)
+            except:
+                running = False
+                break
+    except Exception as e:
+        print(f"An error has occured: {e}")
+        running = False
 
 for client in clients:
     client.close()
