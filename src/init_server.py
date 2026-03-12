@@ -13,7 +13,7 @@ for i in range(len(argv)-1):
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, PORT))
 server_socket.listen(player_amount)
-printf(f"Server started on {HOST}:{PORT}. Waiting for players.")
+print(f"Server started on {HOST}:{PORT}. Waiting for players.")
 
 clients = []
 addresses = []
@@ -21,7 +21,7 @@ addresses = []
 # client connection
 for i in range(player_amount):
     conn, addr = server_socket.accept()
-    printf(f"Player {i} connected ({addr})")
+    print(f"Player {i} connected ({addr})")
     clients.append(conn)
     addresses.append(addr)
     con.send(str(i).encode())
@@ -43,7 +43,7 @@ while running:
                 pass
 
             except ConnectionResetError:
-                printf(f"Player {i} disconnected")
+                print(f"Player {i} disconnected")
                 running = False
                 break
         game_state = pickle.dumps(players)
