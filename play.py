@@ -1,5 +1,6 @@
 from sys import argv
 from threading import Thread
+from music import Music
 import socket
 import pickle
 import pygame
@@ -12,6 +13,8 @@ for i in range(len(argv)-1):
 
 HOST = "localhost"
 PORT = 6767
+
+MUSIC = Music()
 
 # pygame setup
 pygame.init()
