@@ -20,7 +20,7 @@ screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 running = True
 
-client_socket = socket.socket(socket.AF_inet, sock.SOCK_STREAM)
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((HOST, PORT))
 
 player_id = int(client_socket.recv(1024).decode())

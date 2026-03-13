@@ -24,7 +24,7 @@ for i in range(player_amount):
     print(f"Player {i} connected ({addr})")
     clients.append(conn)
     addresses.append(addr)
-    con.send(str(i).encode())
+    conn.send(str(i).encode())
 
 # main server loop
 running = True
@@ -59,5 +59,6 @@ while running:
 
 for client in clients:
     client.close()
+
 server_socket.close()
 print("Server Shut down")
