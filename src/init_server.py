@@ -1,6 +1,8 @@
 from sys import argv
 import pickle
 import socket
+from random import randint
+from player_init import Player
 
 HOST = "localhost"
 PORT = 6767
@@ -14,6 +16,12 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, PORT))
 server_socket.listen(player_amount)
 print(f"Server started on {HOST}:{PORT}. Waiting for players.")
+
+players = dict()
+# {0: <objext class 0x9876>, 1: <object class 0x987654>}
+
+for i in range(player_amount):
+    players[i] = Player(i, (randint(0,800), randint(0,800)), False)
 
 clients = []
 addresses = []
@@ -32,12 +40,24 @@ while running:
     try:    # temp implementation
         for i, client in enumerate(clients):
             try:
+                player = players[i] # make player var object class
                 client.settimeout(0.01)
                 data = client.recv(1024).decode()
                 if not data:
                     break
 
                 # put data logic here
+                if data == "left":
+                    player.move_player(-5, 0)
+                if data == "right":
+                    player.move_player(5, 0)
+                if data == "up":
+                    player.move_player(0, 5)
+                if data == "down":
+                    player.move_player(0, -5)
+
+                print(f"player{i} pos: {player.pos}")
+
 
             except socket.timeout:
                 pass
@@ -46,6 +66,7 @@ while running:
                 print(f"Player {i} disconnected")
                 running = False
                 break
+
         game_state = pickle.dumps(players)
         for client in clients:
             try:

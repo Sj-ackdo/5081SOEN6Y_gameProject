@@ -58,6 +58,16 @@ while running:
     # fill the screen with a color to wipe away anything from last frame
     screen.fill("purple")
 
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+        client_socket.send("left".encode())
+    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+        client_socket.send("right".encode())
+    if keys[pygame.K_UP] or keys[pygame.K_w]:
+        client_socket.send("up".encode())
+    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+        client_socket.send("down".encode())
+
     # RENDER YOUR GAME HERE
 
     if game_state: # make it so we only render if we received data

@@ -20,7 +20,7 @@ class Player:
         content = file.readlines()
         return content[choice].strip()
 
-    def has_bomb(self.bomb):
+    def has_bomb(self):
         return self.bomb
 
     def location(self):
