@@ -31,3 +31,5 @@ class Music:
         self.bomb_explosion_sound.stop()
         self.bomb_received_sound.stop()
         self.bomb_tag_sound.stop()
+
+    # maybe make all sounds play independentely?
