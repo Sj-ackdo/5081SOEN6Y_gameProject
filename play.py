@@ -4,6 +4,7 @@ from music import Music
 import socket
 import pickle
 import pygame
+from player_init import Player
 
 for i in range(len(argv)-1):
     if argv[i] == "--name":

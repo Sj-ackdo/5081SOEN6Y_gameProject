@@ -25,6 +25,21 @@ class Music:
         self.bomb_received_sound.play()
         self.bomb_tag_sound.play()
 
+    def play_background(self):
+        self.background_music.play(-1)
+
+    def play_lobby_music(self):
+        self.lobby_music.play(-1)
+
+    def play_bomb_explosion(self):
+        self.bomb_explosion.play()
+
+    def play_bomb_received(self):
+        self.bomb_received.play()
+
+    def play_bomb_tag(self):
+        self.bomb_tag.play()
+
     def stop(self):
         self.lobby_music_sound.stop()
         self.background_music_sound.stop()
