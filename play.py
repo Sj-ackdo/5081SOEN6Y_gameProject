@@ -38,10 +38,12 @@ def receive_data():
         try:
             data = client_socket.recv(4096)
             if not data:
+                running = False
                 break
             game_state = pickle.loads(data) # network data to dictionary
         except:
             print("Disconnected from the server")
+            running = False
             break
 
 # network thread
@@ -52,35 +54,48 @@ receive_thread.start()
 
 # main game loop
 # handle input with client_socket.send({variable or movement}.encode())
-while running:
-    # poll for events
-    # pygame.QUIT event means the user clicked X to close your window
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+try:
+    while running:
+        # poll for events
+        # pygame.QUIT event means the user clicked X to close your window
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-    # fill the screen with a color to wipe away anything from last frame
-    screen.fill("purple")
+        # fill the screen with a color to wipe away anything from last frame
+        screen.fill("purple")
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-        client_socket.send("left".encode())
-    if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-        client_socket.send("right".encode())
-    if keys[pygame.K_UP] or keys[pygame.K_w]:
-        client_socket.send("up".encode())
-    if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-        client_socket.send("down".encode())
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            client_socket.send("left".encode())
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            client_socket.send("right".encode())
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            client_socket.send("up".encode())
+        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            client_socket.send("down".encode())
 
-    # RENDER YOUR GAME HERE
+        # RENDER YOUR GAME HERE
 
-    if game_state: # make it so we only render if we received data
-        ...
+        if game_state: # make it so we only render if we received data
+            ...
 
-    # flip() the display to put your work on screen
-    pygame.display.flip()
+        # flip() the display to put your work on screen
+        pygame.display.flip()
 
-    clock.tick(60)  # limits FPS to 60
+        clock.tick(60)  # limits FPS to 60
+except Exception as e:
+    print(f"{e}")
 
-client_socket.close()
-pygame.quit()
+finally:
+    print("Shutting down client...")
+
+    running = False  # stop thread
+
+    try:
+        client_socket.send("disconnect".encode())
+    except:
+        pass
+
+    client_socket.close()
+    pygame.quit()
