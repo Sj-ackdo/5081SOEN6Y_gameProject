@@ -1,7 +1,9 @@
 import pygame
+import os
 from random import randint
 
-NAME_FILE="../assets/player_names.txt"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+NAME_FILE = os.path.join(BASE_DIR, "../assets/player_names.txt")
 
 class Player:
     def __init__(self, name, pos, bomb=False):
@@ -19,8 +21,8 @@ class Player:
 
     def random_name(self):
         choice = randint(0,51)
-        file = open(NAME_FILE)
-        content = file.readlines()
+        with open(NAME_FILE) as file:
+            content = file.readlines()
         return content[choice].strip()
 
     def has_bomb(self):

@@ -10,7 +10,7 @@ player_amount = 2   # default to 2 players per connection
 
 for i in range(len(argv)-1):
     if argv[i] == "--player-amount":
-        player_amount == argv[i+1]
+        player_amount = int(argv[i+1])
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((HOST, PORT))
