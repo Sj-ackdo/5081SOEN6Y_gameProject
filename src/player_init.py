@@ -45,6 +45,3 @@ class Player:
 
     def draw_player(self, screen):
         screen.blit(self.user_image, (self.x, self.y))
-
-player1 = Player("_",(16,17),False)
-print(player1)
