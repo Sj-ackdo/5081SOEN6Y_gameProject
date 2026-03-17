@@ -1,10 +1,15 @@
 from sys import argv
 from threading import Thread
 #from music import Music
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+src_path = os.path.join(project_root, "src")
+sys.path.insert(0, src_path)
+from src.player_init import Player
 import socket
 import pickle
 import pygame
-#from player_init import Player
 
 for i in range(len(argv)-1):
     if argv[i] == "--name":
@@ -33,16 +38,16 @@ print(f"Connected to server (player {player_id})")
 game_state = {}
 
 def receive_data():
-    global game_state
+    global game_state, running
     while True:
         try:
             data = client_socket.recv(4096)
             if not data:
-                running = False
-                break
-            game_state = pickle.loads(data) # network data to dictionary
-        except:
-            print("Disconnected from the server")
+               running = False
+               break
+            #game_state = pickle.loads(data) # network data to dictionary
+        except Exception as e:
+            print(f"Disconnected from the server:\n{e}")
             running = False
             break
 
@@ -66,14 +71,17 @@ try:
         screen.fill("purple")
 
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            client_socket.send("left".encode())
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            client_socket.send("right".encode())
-        if keys[pygame.K_UP] or keys[pygame.K_w]:
-            client_socket.send("up".encode())
-        if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-            client_socket.send("down".encode())
+        try:
+            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+                client_socket.send("left\n".encode())
+            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                client_socket.send("right\n".encode())
+            if keys[pygame.K_UP] or keys[pygame.K_w]:
+                client_socket.send("up\n".encode())
+            if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                client_socket.send("down\n".encode())
+        except Exception as e:
+            print(f"Error:\n{e}")
 
         # RENDER YOUR GAME HERE
 
