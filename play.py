@@ -1,10 +1,10 @@
 from sys import argv
 from threading import Thread
-from music import Music
+#from music import Music
 import socket
 import pickle
 import pygame
-from player_init import Player
+#from player_init import Player
 
 for i in range(len(argv)-1):
     if argv[i] == "--name":
@@ -15,7 +15,7 @@ for i in range(len(argv)-1):
 HOST = "localhost"
 PORT = 6767
 
-MUSIC = Music()
+#MUSIC = Music()
 
 # pygame setup
 pygame.init()

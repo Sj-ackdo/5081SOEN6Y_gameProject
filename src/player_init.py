@@ -1,3 +1,4 @@
+import pygame
 from random import randint
 
 NAME_FILE="../assets/player_names.txt"
@@ -10,7 +11,7 @@ class Player:
             self.name = self.random_name()
         self.pos = pos # position is tuple (x,y)
         self.bomb = bomb # True if player starts with bomb or holds bomb
-        self.user_image = pygame.load("../assets/Images/pixel-art.png").convert_alpha()
+        #self.user_image = pygame.load("../assets/Images/pixel-art.png").convert_alpha()
 
 
     def __repr__(self):
@@ -31,12 +32,12 @@ class Player:
     def get_bomb(self, other):
         other.bomb = False
         self.bomb = True
-        self.user_image = pygame.load("../assets/Images/pixel-art(1).png").convert_alpha()
+        #self.user_image = pygame.load("../assets/Images/pixel-art(1).png").convert_alpha()
 
     def give_bomb(self, other):
         self.bomb = False
         other.bomb = True
-        self.user_image = pygame.load("../assets/Images/pixel-art.png").convert_alpha()
+        #self.user_image = pygame.load("../assets/Images/pixel-art.png").convert_alpha()
 
     def move_player(self, x, y):
         pos_x, pos_y = self.pos
