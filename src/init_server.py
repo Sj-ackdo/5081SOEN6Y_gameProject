@@ -6,7 +6,10 @@ from player_init import Player
 import time
 import select
 
-HOST = "localhost"
+hostname = socket.gethostname()
+IPAddr = socket.gethostbyname(hostname)
+
+HOST = "0.0.0.0" # "localhost" change to 0.0.0.0 for lan
 PORT = 6767
 player_amount = 2   # default to 2 players per connection
 
@@ -19,7 +22,7 @@ server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 server_socket.bind((HOST, PORT))
 server_socket.listen(player_amount)
 server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-print(f"Server started on {HOST}:{PORT}. Waiting for players.")
+print(f"Server started on {IPAddr}:{PORT}. Waiting for players.")
 
 players = dict()
 # {0: <objext class 0x9876>, 1: <object class 0x987654>}

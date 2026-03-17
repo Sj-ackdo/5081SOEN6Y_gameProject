@@ -11,14 +11,16 @@ import socket
 import pickle
 import pygame
 
+HOST = "localhost" 
+PORT = 6767
+
 for i in range(len(argv)-1):
+    if argv[i] == "--ip":
+        HOST = str(argv[i+1])
     if argv[i] == "--name":
         client_name = argv[i+1]
     if argv[i] == "--password":
         server_password = argv[i+1] # password implementation
-
-HOST = "localhost"
-PORT = 6767
 
 #MUSIC = Music()
 
@@ -30,10 +32,13 @@ clock = pygame.time.Clock()
 running = True
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((HOST, PORT))
-
-player_id = int(client_socket.recv(1024).decode())
-print(f"Connected to server (player {player_id})")
+try:
+    client_socket.connect((HOST, PORT))
+    player_id = int(client_socket.recv(1024).decode())
+    print(f"Connected to server (player {player_id})")
+except Exception as e:
+    print(f"Could not connect to {HOST}.\n{e}")
+    running = False
 
 game_state = {}
 
