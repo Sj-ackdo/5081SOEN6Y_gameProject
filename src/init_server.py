@@ -75,7 +75,7 @@ while running:
                     if cmd == "up":    players[i].move_player(0, -5)
                     if cmd == "down":  players[i].move_player(0, 5)
 
-            print(f"player{i} pos: {players[i].pos}")
+                # print(f"player{i} pos: {players[i].pos}")  # Commented out to stop spam
 
         except (ConnectionResetError, BrokenPipeError):
             alive[i] = False

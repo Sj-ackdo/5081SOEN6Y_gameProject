@@ -3,10 +3,10 @@ from threading import Thread
 #from music import Music
 import sys
 import os
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+project_root = os.path.abspath(os.path.dirname(__file__))
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
-from src.player_init import Player
+from player_init import Player
 import socket
 import pickle
 import pygame
@@ -30,12 +30,20 @@ pygame.display.set_caption("BombTag")
 screen = pygame.display.set_mode((1280, 720))
 clock = pygame.time.Clock()
 running = True
+networked = False
+player_id = None
+player = Player("offline", (640, 360), False)
+
+game_state = {}
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     client_socket.connect((HOST, PORT))
     player_id = int(client_socket.recv(1024).decode())
     print(f"Connected to server (player {player_id})")
+    networked = True
+    # Create a local player object; actual position will be updated from server state.
+    player = Player(f"player{player_id}", (0, 0), False)
 except Exception as e:
     print(f"Could not connect to {HOST}.\n{e}")
     running = False
@@ -50,16 +58,17 @@ def receive_data():
             if not data:
                running = False
                break
-            #game_state = pickle.loads(data) # network data to dictionary
+            game_state = pickle.loads(data)  # network data to dictionary
         except Exception as e:
             print(f"Disconnected from the server:\n{e}")
             running = False
             break
 
-# network thread
-receive_thread = Thread(target=receive_data)
-receive_thread.daemon = True
-receive_thread.start()
+# network thread (only if connected)
+if networked:
+    receive_thread = Thread(target=receive_data)
+    receive_thread.daemon = True
+    receive_thread.start()
 
 
 # main game loop
@@ -75,23 +84,47 @@ try:
         # fill the screen with a color to wipe away anything from last frame
         screen.fill("purple")
 
+        # Render all players from the game state
+        if game_state:
+            for p in game_state.values():
+                p.draw_player(screen)
+        elif player:
+            # Fallback to local player if no game_state (offline mode)
+            player.draw_player(screen)
+
+        # Movement input
         keys = pygame.key.get_pressed()
-        try:
+
+        if networked:
+            try:
+                if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+                    client_socket.send("left\n".encode())
+                    print("Sent left")
+                if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+                    client_socket.send("right\n".encode())
+                    print("Sent right")
+                if keys[pygame.K_UP] or keys[pygame.K_w]:
+                    client_socket.send("up\n".encode())
+                    print("Sent up")
+                if keys[pygame.K_DOWN] or keys[pygame.K_s]:
+                    client_socket.send("down\n".encode())
+                    print("Sent down")
+            except Exception as e:
+                print(f"Error:\n{e}")
+
+            if game_state:  # make it so we only render if we received data
+                # No need to update local player; we render all from game_state
+                pass
+        else:
+            # Offline movement (no server required)
             if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                client_socket.send("left\n".encode())
+                player.pos = (player.pos[0] - 5, player.pos[1])
             if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                client_socket.send("right\n".encode())
+                player.pos = (player.pos[0] + 5, player.pos[1])
             if keys[pygame.K_UP] or keys[pygame.K_w]:
-                client_socket.send("up\n".encode())
+                player.pos = (player.pos[0], player.pos[1] - 5)
             if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                client_socket.send("down\n".encode())
-        except Exception as e:
-            print(f"Error:\n{e}")
-
-        # RENDER YOUR GAME HERE
-
-        if game_state: # make it so we only render if we received data
-            ...
+                player.pos = (player.pos[0], player.pos[1] + 5)
 
         # flip() the display to put your work on screen
         pygame.display.flip()
@@ -105,10 +138,10 @@ finally:
 
     running = False  # stop thread
 
-    try:
-        client_socket.send("disconnect".encode())
-    except:
-        pass
-
-    client_socket.close()
+    if networked:
+        try:
+            client_socket.send("disconnect".encode())
+        except:
+            pass
+        client_socket.close()
     pygame.quit()
