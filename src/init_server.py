@@ -88,7 +88,7 @@ while running:
                 client.sendall(game_state)
             except:
                 alive[i] = False
-    
+
     processing_time = time.time() - start_time
     sleep_time = max(0, (1./60.) - processing_time)
     time.sleep(sleep_time)

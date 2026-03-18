@@ -11,7 +11,7 @@ import socket
 import pickle
 import pygame
 
-HOST = "localhost" 
+HOST = "localhost" # doe "python play.py --ip {ip dat de server opgeeft}"
 PORT = 6767
 
 for i in range(len(argv)-1):
