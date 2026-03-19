@@ -86,11 +86,22 @@ try:
 
         # Render all players from the game state
         if game_state:
-            for p in game_state.values():
-                p.draw_player(screen)
-        elif player:
-            # Fallback to local player if no game_state (offline mode)
-            player.draw_player(screen)
+            players = game_state.get('players', {})
+            timer = game_state.get('timer', None)
+            winner = game_state.get('winner', None)
+            for p in players.values():
+                if p.alive:
+                    p.draw_player(screen)
+            if timer is not None and winner is None:
+                font = pygame.font.SysFont(None, 48)
+                text = font.render(f"Time until BOOM: {timer}!!", True, (255, 255, 255))
+                text_width = text.get_width()
+                screen.blit(text, ((1280 - text_width) // 2, 10))
+            if winner is not None:
+                font = pygame.font.SysFont(None, 72)
+                text = font.render(f"{winner} wins!", True, (255, 215, 0))
+                text_width = text.get_width()
+                screen.blit(text, ((1280 - text_width) // 2, 300))
 
         # Movement input
         keys = pygame.key.get_pressed()
@@ -99,32 +110,18 @@ try:
             try:
                 if keys[pygame.K_LEFT] or keys[pygame.K_a]:
                     client_socket.send("left\n".encode())
-                    print("Sent left")
                 if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
                     client_socket.send("right\n".encode())
-                    print("Sent right")
                 if keys[pygame.K_UP] or keys[pygame.K_w]:
                     client_socket.send("up\n".encode())
-                    print("Sent up")
                 if keys[pygame.K_DOWN] or keys[pygame.K_s]:
                     client_socket.send("down\n".encode())
-                    print("Sent down")
             except Exception as e:
                 print(f"Error:\n{e}")
 
             if game_state:  # make it so we only render if we received data
                 # No need to update local player; we render all from game_state
                 pass
-        else:
-            # Offline movement (no server required)
-            if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-                player.pos = (player.pos[0] - 5, player.pos[1])
-            if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-                player.pos = (player.pos[0] + 5, player.pos[1])
-            if keys[pygame.K_UP] or keys[pygame.K_w]:
-                player.pos = (player.pos[0], player.pos[1] - 5)
-            if keys[pygame.K_DOWN] or keys[pygame.K_s]:
-                player.pos = (player.pos[0], player.pos[1] + 5)
 
         # flip() the display to put your work on screen
         pygame.display.flip()

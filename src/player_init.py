@@ -15,6 +15,7 @@ class Player:
             self.name = self.random_name()
         self.pos = pos # position is tuple (x,y)
         self.bomb = bomb # True if player starts with bomb or holds bomb
+        self.alive = True
 
         # Defer image loading until pygame.display is initialized
         self.user_image = None
@@ -23,7 +24,7 @@ class Player:
 
 
     def __repr__(self):
-        return f"{self.name} is at {self.pos}. Bomb: {self.bomb}"
+        return f"{self.name} is at {self.pos}. Bomb: {self.bomb}. Alive: {self.alive}"
 
     def random_name(self):
         choice = randint(0,51)
@@ -41,7 +42,10 @@ class Player:
             return
 
         try:
-            self.user_image = pygame.image.load(self._image_path).convert_alpha()
+            if self.bomb == True:
+                self.user_image = pygame.image.load(self._bomb_image_path).convert_alpha()
+            else:
+                self.user_image = pygame.image.load(self._image_path).convert_alpha()
         except Exception:
             # Fallback to a simple placeholder surface.
             self.user_image = pygame.Surface((32, 32), pygame.SRCALPHA)
@@ -56,12 +60,12 @@ class Player:
     def get_bomb(self, other):
         other.bomb = False
         self.bomb = True
-        #self.user_image = pygame.load("../assets/Images/pixel-art(1).png").convert_alpha()
+        self.user_image = None  # Invalidate image so it reloads with bomb sprite
 
     def give_bomb(self, other):
         self.bomb = False
         other.bomb = True
-        #self.user_image = pygame.load("../assets/Images/pixel-art.png").convert_alpha()
+        self.user_image = None  # Invalidate image so it reloads without bomb sprite
 
     def move_player(self, x, y):
         pos_x, pos_y = self.pos

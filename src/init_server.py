@@ -5,6 +5,8 @@ from random import randint
 from player_init import Player
 import time
 import select
+import random
+import math
 
 hostname = socket.gethostname()
 IPAddr = socket.gethostbyname(hostname)
@@ -28,7 +30,14 @@ players = dict()
 # {0: <objext class 0x9876>, 1: <object class 0x987654>}
 
 for i in range(player_amount):
-    players[i] = Player(i, (randint(0,800), randint(0,800)), False)
+    players[i] = Player(i, (randint(0,800), randint(20,700)), False)
+
+# Bomb timer: 60 seconds countdown
+bomb_timer = 15
+last_timer_update = time.time()
+last_pass_time = 0
+win_timer = 10
+winner = None
 
 clients = []
 addresses = []
@@ -69,19 +78,96 @@ while running:
                 buffer[i] = commands[-1]
 
                 # put data logic here
+                if not players[i].alive:
+                    continue
                 for cmd in commands[:-1]:
                     if cmd == "left":  players[i].move_player(-5, 0)
                     if cmd == "right": players[i].move_player(5, 0)
                     if cmd == "up":    players[i].move_player(0, -5)
                     if cmd == "down":  players[i].move_player(0, 5)
 
+                    # Clamp position to screen boundaries (1280x720, assuming ~32x32 sprite)
+                    x, y = players[i].pos
+                    x = max(0, min(1280 - 32, x))
+                    y = max(0, min(720 - 32, y))
+                    players[i].pos = (x, y)
+
                 # print(f"player{i} pos: {players[i].pos}")  # Commented out to stop spam
 
         except (ConnectionResetError, BrokenPipeError):
             alive[i] = False
-            print(f"Player {i} fconnection lost")
+            print(f"Player {i} connection lost")
+            # If the disconnected player had the bomb, reassign it
+            if players[i].bomb:
+                players[i].bomb = False
 
-    game_state = pickle.dumps(players)
+    current_time = time.time() # Set the time for timer related variables
+    
+    alive_players = [p for p in players.values() if p.alive]
+    if len(alive_players) == 1:
+        winner = alive_players[0]
+        winner.bomb = False  # Remove bomb from winner
+        if current_time - last_timer_update >= 1:
+            win_timer -= 1
+            last_timer_update = time.time()
+        if win_timer <= 0:
+            running = False
+    # (optionally stop the server / end the game loop here)
+
+    # Ensure the bomb is always held by someone if there is more than 1 player alive
+    if players and not any(p.bomb for p in players.values()) and len(alive_players) > 1:
+        chosen_player = random.choice(list(players.keys()))
+        players[chosen_player].bomb = True
+        print(f"Bomb reassigned to Player {chosen_player} (no one had it)")
+
+    # Check for bomb passing on collision with 2-second cooldown
+    if current_time - last_pass_time > 2:
+        for pid1, p1 in players.items():
+            if not p1.alive: continue
+            for pid2, p2 in players.items():
+                if pid1 >= pid2 or not p2.alive: continue
+                dx = p1.pos[0] - p2.pos[0]
+                dy = p1.pos[1] - p2.pos[1]
+                dist = math.sqrt(dx**2 + dy**2)
+                if dist < 32:  # collision threshold
+                    if p1.bomb and not p2.bomb:
+                        p1.bomb = False
+                        p2.bomb = True
+                        last_pass_time = current_time
+                        print(f"Bomb passed from Player {pid1} to Player {pid2} on collision")
+                    elif p2.bomb and not p1.bomb:
+                        p2.bomb = False
+                        p1.bomb = True
+                        last_pass_time = current_time
+                        print(f"Bomb passed from Player {pid2} to Player {pid1} on collision")
+
+    if current_time - last_timer_update >= 1:
+        alive_count = sum(1 for p in players.values() if p.alive)
+        if alive_count > 1:
+            bomb_timer -= 1
+            last_timer_update = current_time
+            if bomb_timer <= 0:
+                bomb_timer = 0
+                # Kill the player with the bomb
+                for pid, p in players.items():
+                    if p.bomb and p.alive:
+                        p.alive = False
+                        p.bomb = False
+                        print(f"Player {pid} exploded! (bomb timer ran out)")
+                        # Reassign bomb to a random remaining player
+                        remaining = [k for k, v in players.items() if v.alive]
+                        if remaining:
+                            new_holder = random.choice(remaining)
+                            players[new_holder].bomb = True
+                            bomb_timer = 30  # reset timer
+                            last_timer_update = time.time()
+                            print(f"Bomb reassigned to Player {new_holder}")
+                        break
+                
+    if winner is None:
+        game_state = pickle.dumps({'players': players, 'timer': bomb_timer})
+    else:
+        game_state = pickle.dumps({'players': players, 'timer': win_timer, 'winner': winner.name})
     for i, client in enumerate(clients):
         if alive[i]:
             try:
