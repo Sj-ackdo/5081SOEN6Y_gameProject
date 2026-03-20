@@ -80,11 +80,18 @@ while running:
                 # put data logic here
                 if not players[i].alive:
                     continue
-                for cmd in commands[:-1]:
-                    if cmd == "left":  players[i].move_player(-5, 0)
-                    if cmd == "right": players[i].move_player(5, 0)
-                    if cmd == "up":    players[i].move_player(0, -5)
-                    if cmd == "down":  players[i].move_player(0, 5)
+                if players[i].bomb == False:
+                    for cmd in commands[:-1]:
+                        if cmd == "left":  players[i].move_player(-3, 0)
+                        if cmd == "right": players[i].move_player(3, 0)
+                        if cmd == "up":    players[i].move_player(0, -3)
+                        if cmd == "down":  players[i].move_player(0, 3)
+                else:
+                    for cmd in commands[:-1]:
+                        if cmd == "left":  players[i].move_player(-3.5, 0)
+                        if cmd == "right": players[i].move_player(3.5, 0)
+                        if cmd == "up":    players[i].move_player(0, -3.5)
+                        if cmd == "down":  players[i].move_player(0, 3.5)
 
                     # Clamp position to screen boundaries (1280x720, assuming ~32x32 sprite)
                     x, y = players[i].pos
@@ -96,6 +103,7 @@ while running:
 
         except (ConnectionResetError, BrokenPipeError):
             alive[i] = False
+            players[i].alive = False
             print(f"Player {i} connection lost")
             # If the disconnected player had the bomb, reassign it
             if players[i].bomb:
