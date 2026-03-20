@@ -150,7 +150,7 @@ try:
             screen.blit(background, (0, 0))
 
             # display the number of players connected
-            players = len(game_state.get('players', {})) if game_state else 0
+            players = 0 #placeholder
             players_connected = f"Players connected: {players} / 4"
             players_surface = small_font.render(players_connected, True, "white")
             screen.blit(players_surface, (20, 20))
