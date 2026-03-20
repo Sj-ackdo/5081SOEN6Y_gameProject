@@ -1,15 +1,19 @@
+import os
 import pygame
 
 class Music:
     def __init__(self):
         pygame.mixer.init()
 
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        audio_root = os.path.join(project_root, "assets", "Audio")
+
         # get path to all sounds
-        lobby_music = "../assets/Audio/music/lobby.mp3"
-        background_music = "../assets/Audio/music/Bmusic.mp3"
-        bomb_explosion = "../assets/Audio/sfx/Bomb_explode.mp3"
-        bomb_received = "../assets/Audio/sfx/Bomb_receive.mp3"
-        bomb_tag = "../assets/Audio/sfx/Bombtag.mp3"
+        lobby_music = os.path.join(audio_root, "music", "lobby.mp3")
+        background_music = os.path.join(audio_root, "music", "Bmusic.mp3")
+        bomb_explosion = os.path.join(audio_root, "sfx", "Bomb_explode.mp3")
+        bomb_received = os.path.join(audio_root, "sfx", "Bomb_receive.mp3")
+        bomb_tag = os.path.join(audio_root, "sfx", "Bombtag.mp3")
 
         # load sounds
         self.lobby_music_sound = pygame.mixer.Sound(lobby_music)
@@ -26,19 +30,19 @@ class Music:
         self.bomb_tag_sound.play()
 
     def play_background(self):
-        self.background_music.play(-1)
+        self.background_music_sound.play(-1)
 
     def play_lobby_music(self):
-        self.lobby_music.play(-1)
+        self.lobby_music_sound.play(-1)
 
     def play_bomb_explosion(self):
-        self.bomb_explosion.play()
+        self.bomb_explosion_sound.play()
 
     def play_bomb_received(self):
-        self.bomb_received.play()
+        self.bomb_received_sound.play()
 
     def play_bomb_tag(self):
-        self.bomb_tag.play()
+        self.bomb_tag_sound.play()
 
     def stop(self):
         self.lobby_music_sound.stop()

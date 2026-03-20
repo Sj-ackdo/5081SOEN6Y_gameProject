@@ -7,6 +7,7 @@ project_root = os.path.abspath(os.path.dirname(__file__))
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
 from player_init import Player
+from music import Music
 import socket
 import pickle
 import pygame
@@ -22,7 +23,6 @@ for i in range(len(argv)-1):
     if argv[i] == "--password":
         server_password = argv[i+1] # password implementation
 
-#MUSIC = Music()
 
 # pygame setup
 pygame.init()
@@ -35,6 +35,12 @@ player_id = None
 player = Player("offline", (640, 360), False)
 
 game_state = {}
+
+# Initialize music (start playback when a scene begins)
+MUSIC = Music()
+Game_Scene = "lobby"
+lobby_music_started = False
+game_music_started = False
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
@@ -77,15 +83,95 @@ try:
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
+        mouse_clicked = None
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_clicked = event
 
-        # fill the screen with a color to wipe away anything from last frame
-        screen.fill("purple")
+        # switch to game scene once we have network data
+        if game_state:
+            Game_Scene = "game"
+        else:
+            Game_Scene = "lobby"
+
+        # Lobby UI
+        if Game_Scene == "lobby":
+            if not lobby_music_started:
+                MUSIC.stop()
+                MUSIC.play_lobby_music()
+                lobby_music_started = True
+                game_music_started = False
+            title_text = "Welcome to BombTag!"
+            subtitle_text = "Waiting for players to join..."
+            # Define button areas
+            play_button = pygame.Rect(500, 470, 280, 56)
+            options_button = pygame.Rect(500, 540, 280, 56)
+            quit_button = pygame.Rect(500, 610, 280, 56)
+
+            # Define fonts
+            title_font = pygame.font.Font(None, 80)
+            subtitle_font = pygame.font.Font(None, 40)
+            small_font = pygame.font.Font(None, 32)
+            button_font = pygame.font.Font(None, 36)
+
+            # Load and scale background image
+            background = pygame.image.load("assets/Images/background1.png").convert()
+
+            # Create title and subtitle surfaces
+            title_surface = title_font.render(title_text, True, "yellow")
+            title_rect = title_surface.get_rect(center=(640, 160))
+            subtitle_surface = subtitle_font.render(subtitle_text, True, "white")
+            subtitle_rect = subtitle_surface.get_rect(center=(640, 220))
+
+            # Define a function to draw buttons
+            def draw_button(surface, rect, label, font, bg_color, text_color):
+                pygame.draw.rect(surface, bg_color, rect, border_radius=10)
+                pygame.draw.rect(surface, "white", rect, width=2, border_radius=10)
+                label_surface = font.render(label, True, text_color)
+                label_rect = label_surface.get_rect(center=rect.center)
+                surface.blit(label_surface, label_rect)
+
+            
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            mouse_rect = pygame.Rect(mouse_x, mouse_y, 1, 1)
+
+            if mouse_clicked and mouse_clicked.button == 1:  # Left mouse button
+                if play_button.collidepoint(mouse_rect.center):
+                    print("Play button clicked")
+                elif options_button.collidepoint(mouse_rect.center):
+                    print("Options button clicked")
+                elif quit_button.collidepoint(mouse_rect.center):
+                    print("Quit button clicked")
+                    pygame.quit()
+
+            # blit the background
+            screen.blit(background, (0, 0))
+
+            # display the number of players connected
+            players = len(game_state.get('players', {})) if game_state else 0
+            players_connected = f"Players connected: {players} / 4"
+            players_surface = small_font.render(players_connected, True, "white")
+            screen.blit(players_surface, (20, 20))
+
+            # display the title and subtitle
+            screen.blit(title_surface, title_rect)
+            screen.blit(subtitle_surface, subtitle_rect)
+
+            # draw the buttons
+            #draw_button(screen, play_button, "Play", button_font, "grey", "white")
+            #draw_button(screen, options_button, "Options", button_font, "grey", "white")
+            draw_button(screen, quit_button, "Quit", button_font, "grey", "white")
 
         # Render all players from the game state
         if game_state:
+            screen.fill((128, 0, 128))  # fill background purple
+            if not game_music_started:
+                MUSIC.stop()  # stop lobby music if we have game state
+                MUSIC.play_background()  # start background music
+                game_music_started = True
+                lobby_music_started = False
             players = game_state.get('players', {})
             timer = game_state.get('timer', None)
             winner = game_state.get('winner', None)
@@ -141,4 +227,5 @@ finally:
         except:
             pass
         client_socket.close()
+    MUSIC.stop()
     pygame.quit()
