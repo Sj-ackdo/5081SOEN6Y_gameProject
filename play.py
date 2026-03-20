@@ -150,8 +150,8 @@ try:
             screen.blit(background, (0, 0))
 
             # display the number of players connected
-            players = 0 #placeholder
-            players_connected = f"Players connected: {players} / 4"
+            players = game_state.get('players', {})
+            players_connected = f"Players connected: {len(players)} / 4"
             players_surface = small_font.render(players_connected, True, "white")
             screen.blit(players_surface, (20, 20))
 
@@ -202,6 +202,8 @@ try:
                     client_socket.send("up\n".encode())
                 if keys[pygame.K_DOWN] or keys[pygame.K_s]:
                     client_socket.send("down\n".encode())
+                if keys[pygame.K_LSHIFT]:
+                    client_socket.send("dashing\n".encode())
             except Exception as e:
                 print(f"Error:\n{e}")
 

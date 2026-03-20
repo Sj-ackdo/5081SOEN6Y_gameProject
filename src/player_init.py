@@ -6,6 +6,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 NAME_FILE = os.path.join(BASE_DIR, "../assets/player_names.txt")
 DEFAULT_IMAGE_PATH = os.path.join(BASE_DIR, "../assets/Images/pixel-art.png")
 BOMB_IMAGE_PATH = os.path.join(BASE_DIR, "../assets/Images/pixel-art(1).png")
+DASH_IMAGE_PATH = os.path.join(BASE_DIR, "../assets/Images/pixel-art-dash-ready.png")
+BOMB_DASH_IMAGE_PATH = os.path.join(BASE_DIR, "../assets/Images/pixel-art-dash-ready(1).png")
+
 
 class Player:
     def __init__(self, name, pos, bomb=False):
@@ -16,15 +19,21 @@ class Player:
         self.pos = pos # position is tuple (x,y)
         self.bomb = bomb # True if player starts with bomb or holds bomb
         self.alive = True
+        self.dashing = False
+        self.dash_on_cooldown = False
+        self.last_dash_start = 0
+        self.last_dash_end = 0
 
         # Defer image loading until pygame.display is initialized
         self.user_image = None
         self._image_path = DEFAULT_IMAGE_PATH
         self._bomb_image_path = BOMB_IMAGE_PATH
+        self._dash_image_path = DASH_IMAGE_PATH
+        self._bomb_dash_image_path = BOMB_DASH_IMAGE_PATH
 
 
     def __repr__(self):
-        return f"{self.name} is at {self.pos}. Bomb: {self.bomb}. Alive: {self.alive}"
+        return f"{self.name} is at {self.pos}. Bomb: {self.bomb}. Alive: {self.alive}."
 
     def random_name(self):
         choice = randint(0,51)
@@ -42,10 +51,14 @@ class Player:
             return
 
         try:
-            if self.bomb == True:
-                self.user_image = pygame.image.load(self._bomb_image_path).convert_alpha()
-            else:
+            if self.bomb == False and self.dash_on_cooldown == True:
                 self.user_image = pygame.image.load(self._image_path).convert_alpha()
+            elif self.bomb == False and self.dash_on_cooldown == False:
+                self.user_image = pygame.image.load(self._dash_image_path).convert_alpha()
+            elif self.bomb == True and self.dash_on_cooldown == True:
+                self.user_image = pygame.image.load(self._bomb_image_path).convert_alpha()
+            elif self.bomb == True and self.dash_on_cooldown == False:
+                self.user_image = pygame.image.load(self._bomb_dash_image_path).convert_alpha()
         except Exception:
             # Fallback to a simple placeholder surface.
             self.user_image = pygame.Surface((32, 32), pygame.SRCALPHA)

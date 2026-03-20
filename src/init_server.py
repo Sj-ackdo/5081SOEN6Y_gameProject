@@ -38,6 +38,7 @@ last_timer_update = time.time()
 last_pass_time = 0
 win_timer = 10
 winner = None
+dashing_cooldown = 2
 
 clients = []
 addresses = []
@@ -70,6 +71,7 @@ while running:
             if not data:
                 print(f"player{i} disconnected (socket closed)")
                 alive[i] = False
+                players[i].alive = False
                 continue
 
             buffer[i] += data # buffer for tcp madness
@@ -80,24 +82,32 @@ while running:
                 # put data logic here
                 if not players[i].alive:
                     continue
-                if players[i].bomb == False:
-                    for cmd in commands[:-1]:
-                        if cmd == "left":  players[i].move_player(-3, 0)
-                        if cmd == "right": players[i].move_player(3, 0)
-                        if cmd == "up":    players[i].move_player(0, -3)
-                        if cmd == "down":  players[i].move_player(0, 3)
-                else:
-                    for cmd in commands[:-1]:
-                        if cmd == "left":  players[i].move_player(-3.5, 0)
-                        if cmd == "right": players[i].move_player(3.5, 0)
-                        if cmd == "up":    players[i].move_player(0, -3.5)
-                        if cmd == "down":  players[i].move_player(0, 3.5)
 
-                    # Clamp position to screen boundaries (1280x720, assuming ~32x32 sprite)
-                    x, y = players[i].pos
-                    x = max(0, min(1280 - 32, x))
-                    y = max(0, min(720 - 32, y))
-                    players[i].pos = (x, y)
+                current_time = time.time()
+                if "dashing" in commands and not players[i].dash_on_cooldown and not players[i].dashing:
+                    players[i].dashing = True
+                    players[i].last_dash_start = current_time
+                    players[i].dash_on_cooldown = True
+
+                # Apply movement with appropriate speed based on dash state
+                for cmd in commands[:-1]:
+                    if players[i].dashing:
+                        speed = 10  # Dash speed
+                    elif players[i].bomb:
+                        speed = 3.5  # Bomb holder speed
+                    else:
+                        speed = 3  # Normal speed
+                    
+                    if cmd == "left":  players[i].move_player(-speed, 0)
+                    if cmd == "right": players[i].move_player(speed, 0)
+                    if cmd == "up":    players[i].move_player(0, -speed)
+                    if cmd == "down":  players[i].move_player(0, speed)
+
+                # Clamp position to screen boundaries (1280x720, assuming ~32x32 sprite)
+                x, y = players[i].pos
+                x = max(0, min(1280 - 32, x))
+                y = max(0, min(720 - 32, y))
+                players[i].pos = (x, y)
 
                 # print(f"player{i} pos: {players[i].pos}")  # Commented out to stop spam
 
@@ -109,7 +119,18 @@ while running:
             if players[i].bomb:
                 players[i].bomb = False
 
-    current_time = time.time() # Set the time for timer related variables
+    current_time = time.time()
+
+    # Update dash states for all players
+    for pid, p in players.items():
+        # dash length is 0.15 seconds, cooldown is 2 seconds after dash ends
+        if p.dashing and current_time - p.last_dash_start > 0.15:
+            p.dashing = False
+            p.last_dash_end = current_time
+        # can dash again if cooldown has passed
+        if p.dash_on_cooldown and current_time - p.last_dash_end > dashing_cooldown and current_time - p.last_dash_start > 0.15:
+            print("dash cooldown reset")
+            p.dash_on_cooldown = False
     
     alive_players = [p for p in players.values() if p.alive]
     if len(alive_players) == 1:
@@ -120,7 +141,6 @@ while running:
             last_timer_update = time.time()
         if win_timer <= 0:
             running = False
-    # (optionally stop the server / end the game loop here)
 
     # Ensure the bomb is always held by someone if there is more than 1 player alive
     if players and not any(p.bomb for p in players.values()) and len(alive_players) > 1:
@@ -152,7 +172,7 @@ while running:
     if current_time - last_timer_update >= 1:
         alive_count = sum(1 for p in players.values() if p.alive)
         if alive_count > 1:
-            bomb_timer -= 1
+            # bomb_timer -= 1
             last_timer_update = current_time
             if bomb_timer <= 0:
                 bomb_timer = 0
