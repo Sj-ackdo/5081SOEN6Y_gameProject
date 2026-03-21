@@ -7,6 +7,7 @@ project_root = os.path.abspath(os.path.dirname(__file__))
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
 from player_init import Player
+from config import player_amount
 from music import Music
 import socket
 import pickle
@@ -97,8 +98,8 @@ try:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_clicked = event
 
-        # switch to game scene once we have network data
-        if game_state:
+        # switch to game scene only when server says game_started
+        if game_state.get('game_started', False):
             Game_Scene = "game"
         else:
             Game_Scene = "lobby"
