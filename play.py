@@ -45,6 +45,7 @@ game_music_started = False
 bomb_exploding_started = False
 bomb_tag_started = False
 dash_sound_started = False
+prev_bomb_holder = None
 
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -190,6 +191,21 @@ try:
             players = game_state.get('players', {})
             timer = game_state.get('timer', None)
             winner = game_state.get('winner', None)
+
+            # Detect bomb holder change and play sounds
+            current_bomb_holder = None
+            for pid, p in players.items():
+                if p.bomb:
+                    current_bomb_holder = pid
+                    break
+            if current_bomb_holder is not prev_bomb_holder:
+                # Play different sounds for getting vs losing the bomb
+                if current_bomb_holder == player_id:
+                    MUSIC.play_bomb_received()
+                elif prev_bomb_holder == player_id:
+                    MUSIC.play_bomb_tag()
+                prev_bomb_holder = current_bomb_holder
+
             for p in players.values():
                 if p.alive:
                     p.draw_player(screen)
