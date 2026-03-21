@@ -66,7 +66,6 @@ while len(alive) < player_amount:
     #time.sleep(0.5)
 
 buffer = [""] * len(clients)
-#alive = [True] * player_amount
 
 # main server loop
 running = True
