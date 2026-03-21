@@ -11,3 +11,5 @@
 - items / powerups (no collcheck+wall shifting)?
 - game_states checken + hoe game_state opslaan
 - Extra: multiple lobby*
+- bug - Dash sound plays only once 
+
