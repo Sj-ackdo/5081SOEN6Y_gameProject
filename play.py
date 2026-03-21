@@ -7,6 +7,7 @@ project_root = os.path.abspath(os.path.dirname(__file__))
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
 from player_init import Player
+from config import player_amount
 from music import Music
 import socket
 import pickle
@@ -90,8 +91,8 @@ try:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_clicked = event
 
-        # switch to game scene once we have network data
-        if game_state:
+        # switch to game scene only when server says game_started
+        if game_state.get('game_started', False):
             Game_Scene = "game"
         else:
             Game_Scene = "lobby"
@@ -151,7 +152,15 @@ try:
 
             # display the number of players connected
             players = game_state.get('players', {})
-            players_connected = f"Players connected: {len(players)} / 4"
+            players_connected_count = game_state.get('players_connected', len(players))
+            player_amount_server = game_state.get('player_amount', player_amount)
+            start_countdown = game_state.get('start_countdown', 0)
+            if players_connected_count == player_amount_server:
+                subtitle_text = f"Starting in {start_countdown}..." if start_countdown > 0 else "Starting soon..."
+            else:
+                subtitle_text = f"Waiting for players to join... ({players_connected_count}/{player_amount_server})"
+
+            players_connected = f"Players connected: {players_connected_count} / {player_amount_server}"
             players_surface = small_font.render(players_connected, True, "white")
             screen.blit(players_surface, (20, 20))
 

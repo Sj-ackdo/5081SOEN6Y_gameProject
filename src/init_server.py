@@ -3,6 +3,7 @@ import pickle
 import socket
 from random import randint
 from player_init import Player
+from config import bomb_timer, win_timer, dashing_cooldown, player_amount
 import time
 import select
 import random
@@ -12,8 +13,7 @@ hostname = socket.gethostname()
 IPAddr = socket.gethostbyname(hostname)
 
 HOST = "0.0.0.0" # "localhost" change to 0.0.0.0 for lan
-PORT = 6767
-player_amount = 2   # default to 2 players per connection
+PORT = 6767 
 
 for i in range(len(argv)-1):
     if argv[i] == "--player-amount":
@@ -32,13 +32,9 @@ players = dict()
 for i in range(player_amount):
     players[i] = Player(i, (randint(0,800), randint(20,700)), False)
 
-# Bomb timer: 60 seconds countdown
-bomb_timer = 15
 last_timer_update = time.time()
 last_pass_time = 0
-win_timer = 10
 winner = None
-dashing_cooldown = 2
 
 clients = []
 addresses = []
@@ -58,6 +54,7 @@ alive = [True] * player_amount
 running = True
 while running:
     start_time = time.time()
+    current_time = time.time()
     alive_clients = [c for i, c in enumerate(clients) if alive[i]]
     if not alive_clients:
         break
@@ -83,7 +80,6 @@ while running:
                 if not players[i].alive:
                     continue
 
-                current_time = time.time()
                 if "dashing" in commands and not players[i].dash_on_cooldown and not players[i].dashing:
                     players[i].dashing = True
                     players[i].last_dash_start = current_time
@@ -119,8 +115,6 @@ while running:
             if players[i].bomb:
                 players[i].bomb = False
 
-    current_time = time.time()
-
     # Update dash states for all players
     for pid, p in players.items():
         # dash length is 0.15 seconds, cooldown is 2 seconds after dash ends
@@ -129,7 +123,6 @@ while running:
             p.last_dash_end = current_time
         # can dash again if cooldown has passed
         if p.dash_on_cooldown and current_time - p.last_dash_end > dashing_cooldown and current_time - p.last_dash_start > 0.15:
-            print("dash cooldown reset")
             p.dash_on_cooldown = False
     
     alive_players = [p for p in players.values() if p.alive]
@@ -148,8 +141,8 @@ while running:
         players[chosen_player].bomb = True
         print(f"Bomb reassigned to Player {chosen_player} (no one had it)")
 
-    # Check for bomb passing on collision with 2-second cooldown
-    if current_time - last_pass_time > 2:
+    # Check for bomb passing on collision with 1-second cooldown
+    if current_time - last_pass_time > 1:
         for pid1, p1 in players.items():
             if not p1.alive: continue
             for pid2, p2 in players.items():
@@ -172,7 +165,7 @@ while running:
     if current_time - last_timer_update >= 1:
         alive_count = sum(1 for p in players.values() if p.alive)
         if alive_count > 1:
-            # bomb_timer -= 1
+            bomb_timer -= 1
             last_timer_update = current_time
             if bomb_timer <= 0:
                 bomb_timer = 0
@@ -193,9 +186,9 @@ while running:
                         break
                 
     if winner is None:
-        game_state = pickle.dumps({'players': players, 'timer': bomb_timer})
+        game_state = pickle.dumps({'players': players, 'timer': bomb_timer, 'game_started': True})
     else:
-        game_state = pickle.dumps({'players': players, 'timer': win_timer, 'winner': winner.name})
+        game_state = pickle.dumps({'players': players, 'timer': win_timer, 'winner': winner.name, 'game_started': True})
     for i, client in enumerate(clients):
         if alive[i]:
             try:
