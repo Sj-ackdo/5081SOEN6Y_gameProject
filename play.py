@@ -42,6 +42,10 @@ MUSIC = Music()
 Game_Scene = "lobby"
 lobby_music_started = False
 game_music_started = False
+bomb_exploding_started = False
+bomb_tag_started = False
+dash_sound_started = False
+
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
@@ -195,6 +199,9 @@ try:
                 text_width = text.get_width()
                 screen.blit(text, ((1280 - text_width) // 2, 10))
             if winner is not None:
+                if not bomb_exploding_started:
+                    MUSIC.play_bomb_explosion()
+                    bomb_exploding_started = True
                 font = pygame.font.SysFont(None, 72)
                 text = font.render(f"{winner} wins!", True, (255, 215, 0))
                 text_width = text.get_width()
@@ -215,6 +222,9 @@ try:
                     client_socket.send("down\n".encode())
                 if keys[pygame.K_LSHIFT]:
                     client_socket.send("dashing\n".encode())
+                    if not dash_sound_started:
+                        MUSIC.play_dash()
+                        dash_sound_started = True
             except Exception as e:
                 print(f"Error:\n{e}")
 
