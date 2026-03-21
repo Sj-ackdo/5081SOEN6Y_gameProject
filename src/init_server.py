@@ -42,17 +42,35 @@ dashing_cooldown = 2
 
 clients = []
 addresses = []
+alive = []
+
+def broadcast_lobby_state():
+    lobby_state = pickle.dumps({
+        'player_count': len(clients),
+        'max_players': player_amount
+    })
+    for i, client in enumerate(clients):
+        if alive[i]:
+            try:
+                client.sendall(lobby_state)
+            except:
+                alive[i] = False
 
 # client connection
-for i in range(player_amount):
-    conn, addr = server_socket.accept()
-    print(f"Player {i} connected ({addr})")
-    clients.append(conn)
-    addresses.append(addr)
-    conn.send(str(i).encode())
+while len(alive) < player_amount:
+    for i in range(player_amount):
+        conn, addr = server_socket.accept()
+        print(f"Player {i} connected ({addr})")
+        clients.append(conn)
+        addresses.append(addr)
+        conn.send(str(i).encode())
+        players[i] = Player(i, (randint(0,800), randint(20,700)), False)
+        alive.append(True)
+        broadcast_lobby_state()
+    #time.sleep(0.5)
 
 buffer = [""] * len(clients)
-alive = [True] * player_amount
+#alive = [True] * player_amount
 
 # main server loop
 running = True

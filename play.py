@@ -55,18 +55,25 @@ except Exception as e:
     running = False
 
 game_state = {}
+lobby_state = {}
 
 def receive_data():
-    global game_state, running
-    while True:
+    global game_state, lobby_state, running
+    while running:
         try:
             data = client_socket.recv(4096)
             if not data:
                running = False
                break
-            game_state = pickle.loads(data)  # network data to dictionary
+            state = pickle.loads(data)
+            # lobby update: just player_count and max_players
+            if 'player_count' in state and 'players' not in state:
+                lobby_state = state
+            else:
+                # game state with players, timer, etc
+                game_state = state
         except Exception as e:
-            print(f"Disconnected from the server:\n{e}")
+            print(f"Disconnected from server:\n{e}")
             running = False
             break
 
@@ -144,14 +151,17 @@ try:
                     print("Options button clicked")
                 elif quit_button.collidepoint(mouse_rect.center):
                     print("Quit button clicked")
+                    client_socket.send("disconnect from game".encode())
+                    client_socket.close()
                     pygame.quit()
 
             # blit the background
             screen.blit(background, (0, 0))
 
             # display the number of players connected
-            players = game_state.get('players', {})
-            players_connected = f"Players connected: {len(players)} / 4"
+            player_count = lobby_state.get('player_count')
+            max_players = lobby_state.get('max_players', 2)
+            players_connected = f"Players connected: {player_count} / {max_players}"
             players_surface = small_font.render(players_connected, True, "white")
             screen.blit(players_surface, (20, 20))
 
