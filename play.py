@@ -47,6 +47,12 @@ bomb_tag_started = False
 dash_sound_started = False
 prev_bomb_holder = None
 
+# Background maps
+map1 = pygame.image.load("assets/Images/map1.png").convert()
+map1 = pygame.transform.scale(map1, (1280, 720))
+
+map2 = pygame.image.load("assets/Images/map2.png").convert()
+map2 = pygame.transform.scale(map2, (1280, 720))
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
@@ -183,9 +189,8 @@ try:
 
         # Render all players from the game state
         if game_state:
-            screen.fill((128, 0, 128))  # fill background purple
-            for wall in walls:
-                pygame.draw.rect(screen, wallcolor, wall)  # draw walls as colored rectangles
+            screen.blit(map1, (0, 0))
+            
             if not game_music_started:
                 MUSIC.stop()  # stop lobby music if we have game state
                 MUSIC.play_background()  # start background music
@@ -222,7 +227,7 @@ try:
                     MUSIC.play_bomb_explosion()
                     bomb_exploding_started = True
                 font = pygame.font.SysFont(None, 72)
-                text = font.render(f"{winner} wins!", True, (255, 215, 0))
+                text = font.render(f"Player {winner} wins!", True, (255, 215, 0))
                 text_width = text.get_width()
                 screen.blit(text, ((1280 - text_width) // 2, 300))
 
