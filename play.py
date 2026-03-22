@@ -51,7 +51,7 @@ prev_bomb_holder = None
 map1 = pygame.image.load("assets/Images/map1.png").convert()
 map1 = pygame.transform.scale(map1, (1280, 720))
 
-map2 = pygame.image.load("assets/Images/map2.png").convert()
+map2 = pygame.image.load("assets/Images/Map2.png").convert()
 map2 = pygame.transform.scale(map2, (1280, 720))
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
