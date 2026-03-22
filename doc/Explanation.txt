@@ -1,0 +1,9 @@
+This is a bombtag game.
+The goal of the game is to be the last player standing. The player does this by anytime they have the bomb, they pass it on by "tagging" the other player before the timer runs out. At the start of the round, a player gets the bomb and a timer starts, when the timer ends, the bomb explodes. 
+Controls
+W/Arrow up: move upwards
+A/Arrow left: move left
+S/Arrow down: move downwards
+D/Arrow right: move right
+Shift while moving: Dash in movement direction
+
