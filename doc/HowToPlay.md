@@ -21,4 +21,5 @@ $ python src/init_server.py arg1 arg2
 ```
 
 where *arg1* and *arg2* can be any of the following:<br>
-`--player-amount {int}`, denotes the amount of players allowed to connect to the server (standard is 2)<br>
+`--player-amount {int}`, is used to set the amount of players allowed to connect to the server (standard is 2)<br>
+`--map {int}`, is used to choose which map to use in the game (1 or 2)
