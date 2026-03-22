@@ -42,7 +42,7 @@ lobby_music_started = False
 game_music_started = False
 bomb_exploding_started = False
 bomb_tag_started = False
-dash_sound_started = False
+prev_local_dashing = False
 prev_bomb_holder = None
 
 # Background maps
@@ -223,6 +223,14 @@ try:
             for p in players.values():
                 if p.alive:
                     p.draw_player(screen)
+
+            # Play dash sound on local dash start
+            local_player = players.get(player_id)
+            if local_player is not None:
+                if local_player.dashing and not prev_local_dashing:
+                    MUSIC.play_dash()
+                prev_local_dashing = local_player.dashing
+
             if timer is not None and winner is None:
                 font = pygame.font.SysFont(None, 48)
                 text = font.render(f"Time until BOOM: {timer}!!", True, (255, 255, 255))
@@ -252,9 +260,6 @@ try:
                     client_socket.send("down\n".encode())
                 if keys[pygame.K_LSHIFT]:
                     client_socket.send("dashing\n".encode())
-                    if not dash_sound_started:
-                        MUSIC.play_dash()
-                        dash_sound_started = True
             except Exception as e:
                 print(f"Error:\n{e}")
 

@@ -23,6 +23,15 @@ class Music:
         self.bomb_received_sound = pygame.mixer.Sound(bomb_received)
         self.bomb_tag_sound = pygame.mixer.Sound(bomb_tag)
         self.dash_sound = pygame.mixer.Sound(dash_sound)
+        
+        # set volume
+        self.lobby_music_sound.set_volume(0.8)
+        self.background_music_sound.set_volume(1)
+        self.bomb_explosion_sound.set_volume(1)
+        self.bomb_received_sound.set_volume(1)
+        self.bomb_tag_sound.set_volume(1)
+        self.dash_sound.set_volume(0.3)
+
 
     def play(self):
         self.lobby_music_sound.play(-1)  # -1 means loop indefinitely
