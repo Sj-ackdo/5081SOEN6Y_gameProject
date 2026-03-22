@@ -12,6 +12,7 @@ from music import Music
 import socket
 import pickle
 import pygame
+import random
 
 HOST = "localhost" # doe "python play.py --ip {ip dat de server opgeeft}"
 PORT = 6767
@@ -33,7 +34,6 @@ clock = pygame.time.Clock()
 running = True
 networked = False
 player_id = None
-player = Player("offline", (640, 360), False)
 
 game_state = {}
 
@@ -89,6 +89,7 @@ if networked:
     receive_thread.daemon = True
     receive_thread.start()
 
+wallcolor = random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
 
 # main game loop
 # handle input with client_socket.send({variable or movement}.encode())
@@ -184,7 +185,7 @@ try:
         if game_state:
             screen.fill((128, 0, 128))  # fill background purple
             for wall in walls:
-                pygame.draw.rect(screen, (0, 0, 0), wall)  # draw walls as black rectangles
+                pygame.draw.rect(screen, wallcolor, wall)  # draw walls as colored rectangles
             if not game_music_started:
                 MUSIC.stop()  # stop lobby music if we have game state
                 MUSIC.play_background()  # start background music

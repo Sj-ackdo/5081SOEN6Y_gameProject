@@ -4,7 +4,7 @@ import socket
 import pygame
 from random import randint
 from player_init import Player
-from config import bomb_timer, win_timer, dashing_cooldown, player_amount, walls
+from config import bomb_timer, win_timer, dashing_cooldown, player_amount, walls, spawn_points
 import time
 import select
 import random
@@ -29,9 +29,6 @@ print(f"Server started on {IPAddr}:{PORT}. Waiting for players.")
 
 players = dict()
 # {0: <objext class 0x9876>, 1: <object class 0x987654>}
-
-for i in range(player_amount):
-    players[i] = Player(i, (randint(0,800), randint(20,700)), False)
 
 last_timer_update = time.time()
 last_pass_time = 0
@@ -61,7 +58,7 @@ while len(alive) < player_amount:
         clients.append(conn)
         addresses.append(addr)
         conn.send(str(i).encode())
-        players[i] = Player(i, (randint(100,1000), randint(50,600)), False)
+        players[i] = Player(i, spawn_points[i], False)
         alive.append(True)
         broadcast_lobby_state()
     #time.sleep(0.5)
@@ -120,7 +117,7 @@ while running:
                     if cmd == "down":  players[i].move_player(0, speed)
 
                     #collision with walls
-                    player_rect = pygame.Rect(players[i].pos[0], players[i].pos[1], 32, 32)    
+                    player_rect = pygame.Rect(players[i].pos[0], players[i].pos[1], 27, 27)    
                     for wall in walls:
                             if wall.colliderect(player_rect):
                                 players[i].pos = (old_x, old_y)  

@@ -1,5 +1,5 @@
 import pygame
-walls = [pygame.Rect(0, 670, 1280, 50), pygame.Rect(0, 0, 50, 720), pygame.Rect(1230, 0, 50, 720), pygame.Rect(300, 200, 100, 30),
+walls = [pygame.Rect(300, 200, 100, 30),
     pygame.Rect(000, 300, 300, 30),
     pygame.Rect(400, 300, 400, 30),
     pygame.Rect(100, 100, 200, 30),
@@ -14,7 +14,8 @@ walls = [pygame.Rect(0, 670, 1280, 50), pygame.Rect(0, 0, 50, 720), pygame.Rect(
     pygame.Rect(800, 400, 100, 30),
     pygame.Rect(300, 600, 100, 30),
     pygame.Rect(800, 600, 100, 30)]
-bomb_timer = 15 # time until first bomb explodes
+bomb_timer = 30 # time until first bomb explodes
 win_timer = 10 # time the game remains open after a winner is declared
 dashing_cooldown = 2 # dash cooldown
 player_amount = 2 # max amount of players for the server
+spawn_points = [(50, 50), (1200, 50), (50, 650), (1200, 650)] # spawn points for players
