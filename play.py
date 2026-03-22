@@ -7,7 +7,7 @@ project_root = os.path.abspath(os.path.dirname(__file__))
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
 from player_init import Player
-from config import player_amount
+from config import player_amount, walls
 from music import Music
 import socket
 import pickle
@@ -183,6 +183,8 @@ try:
         # Render all players from the game state
         if game_state:
             screen.fill((128, 0, 128))  # fill background purple
+            for wall in walls:
+                pygame.draw.rect(screen, (0, 0, 0), wall)  # draw walls as black rectangles
             if not game_music_started:
                 MUSIC.stop()  # stop lobby music if we have game state
                 MUSIC.play_background()  # start background music

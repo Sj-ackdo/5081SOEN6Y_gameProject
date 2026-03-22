@@ -1,9 +1,10 @@
 from sys import argv
 import pickle
 import socket
+import pygame
 from random import randint
 from player_init import Player
-from config import bomb_timer, win_timer, dashing_cooldown, player_amount
+from config import bomb_timer, win_timer, dashing_cooldown, player_amount, walls
 import time
 import select
 import random
@@ -60,7 +61,7 @@ while len(alive) < player_amount:
         clients.append(conn)
         addresses.append(addr)
         conn.send(str(i).encode())
-        players[i] = Player(i, (randint(0,800), randint(20,700)), False)
+        players[i] = Player(i, (randint(100,1000), randint(50,600)), False)
         alive.append(True)
         broadcast_lobby_state()
     #time.sleep(0.5)
@@ -110,12 +111,20 @@ while running:
                         speed = 3.5  # Bomb holder speed
                     else:
                         speed = 3  # Normal speed
+
+                    old_x, old_y = players[i].pos
                     
                     if cmd == "left":  players[i].move_player(-speed, 0)
                     if cmd == "right": players[i].move_player(speed, 0)
                     if cmd == "up":    players[i].move_player(0, -speed)
                     if cmd == "down":  players[i].move_player(0, speed)
 
+                    #collision with walls
+                    player_rect = pygame.Rect(players[i].pos[0], players[i].pos[1], 32, 32)    
+                    for wall in walls:
+                            if wall.colliderect(player_rect):
+                                players[i].pos = (old_x, old_y)  
+                                break
                 # Clamp position to screen boundaries (1280x720, assuming ~32x32 sprite)
                 x, y = players[i].pos
                 x = max(0, min(1280 - 32, x))
