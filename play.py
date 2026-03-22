@@ -1,13 +1,12 @@
 from sys import argv
 from threading import Thread
-#from music import Music
 import sys
 import os
 project_root = os.path.abspath(os.path.dirname(__file__))
 src_path = os.path.join(project_root, "src")
 sys.path.insert(0, src_path)
 from player_init import Player
-from config import player_amount, walls
+from config import player_amount, walls_map1, walls_map2
 from music import Music
 import socket
 import pickle
@@ -24,7 +23,6 @@ for i in range(len(argv)-1):
         client_name = argv[i+1]
     if argv[i] == "--password":
         server_password = argv[i+1] # password implementation
-
 
 # pygame setup
 pygame.init()
@@ -110,6 +108,13 @@ try:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_clicked = event
 
+        # check which map will be played
+        chosen_map_num = lobby_state.get("map_number", 1)
+        if chosen_map_num == 1:
+            chosen_map = map1
+        elif chosen_map_num == 2:
+            chosen_map = map2
+
         # switch to game scene only when server says game_started
         if game_state.get('game_started', False):
             Game_Scene = "game"
@@ -164,8 +169,9 @@ try:
                     print("Options button clicked")
                 elif quit_button.collidepoint(mouse_rect.center):
                     print("Quit button clicked")
-                    client_socket.send("disconnect from game".encode())
+                    client_socket.send("disconnect\n".encode())
                     client_socket.close()
+                    MUSIC.stop()
                     pygame.quit()
 
             # blit the background
@@ -189,7 +195,7 @@ try:
 
         # Render all players from the game state
         if game_state:
-            screen.blit(map1, (0, 0))
+            screen.blit(chosen_map, (0, 0))
             
             if not game_music_started:
                 MUSIC.stop()  # stop lobby music if we have game state
@@ -252,10 +258,6 @@ try:
             except Exception as e:
                 print(f"Error:\n{e}")
 
-            if game_state:  # make it so we only render if we received data
-                # No need to update local player; we render all from game_state
-                pass
-
         # flip() the display to put your work on screen
         pygame.display.flip()
 
@@ -267,12 +269,10 @@ finally:
     print("Shutting down client...")
 
     running = False  # stop thread
-
-    if networked:
-        try:
-            client_socket.send("disconnect".encode())
-        except:
-            pass
-        client_socket.close()
-    MUSIC.stop()
+    try:
+        client_socket.send("disconnect\n".encode())
+    except:
+        pass
+    client_socket.close()
+    #MUSIC.stop()
     pygame.quit()

@@ -4,7 +4,8 @@ import socket
 import pygame
 from random import randint
 from player_init import Player
-from config import bomb_timer, win_timer, dashing_cooldown, player_amount, walls, spawn_points
+from config import bomb_timer, win_timer, dashing_cooldown
+from config import walls_map1, walls_map2, player_amount, spawn_points
 import time
 import select
 import random
@@ -14,11 +15,20 @@ hostname = socket.gethostname()
 IPAddr = socket.gethostbyname(hostname)
 
 HOST = "0.0.0.0" # "localhost" change to 0.0.0.0 for lan
-PORT = 6767 
+PORT = 6767
+chosen_map = 1
 
-for i in range(len(argv)-1):
-    if argv[i] == "--player-amount":
+for i in range(len(argv)):
+    arg = argv[i].lower()
+    if arg == "--player-amount":
         player_amount = int(argv[i+1])
+    elif arg == "--map":
+        chosen_map = int(argv[i+1])
+    elif arg in ("-h", "--help"):
+        print("\n\nserver program for bombtag\n Available arguments:\n"
+              "--player-amount  amount of players until game starts, integer\n"
+              "--map            which map to play on, integer")
+        exit()
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -41,7 +51,8 @@ alive = []
 def broadcast_lobby_state():
     lobby_state = pickle.dumps({
         'player_count': len(clients),
-        'max_players': player_amount
+        'max_players': player_amount,
+        'map_number': chosen_map
     })
     for i, client in enumerate(clients):
         if alive[i]:
@@ -61,9 +72,13 @@ while len(alive) < player_amount:
         players[i] = Player(i, spawn_points[i], False)
         alive.append(True)
         broadcast_lobby_state()
-    #time.sleep(0.5)
 
 buffer = [""] * len(clients)
+
+if chosen_map == 1:
+    walls = walls_map1
+elif chosen_map == 2:
+    walls = walls_map2
 
 # main server loop
 running = True
@@ -74,17 +89,22 @@ while running:
     if not alive_clients:
         break
 
+    for i, client in enumerate(clients):
+        if not alive[i]:
+            try:
+                client.close()
+            except:
+                pass
+
     ready_to_read,_,_ = select.select(alive_clients, [], [], 0.01)
 
     for client in ready_to_read:
         i = clients.index(client)
         try:
-            data = client.recv(1024).decode()
+            data = client.recv(1024)
             if not data:
-                print(f"player{i} disconnected (socket closed)")
-                alive[i] = False
-                players[i].alive = False
-                continue
+                raise ConnectionResetError
+            data = data.decode()
 
             buffer[i] += data # buffer for tcp madness
             if "\n" in buffer[i]:
@@ -110,11 +130,22 @@ while running:
                         speed = 3  # Normal speed
 
                     old_x, old_y = players[i].pos
-                    
+
                     if cmd == "left":  players[i].move_player(-speed, 0)
                     if cmd == "right": players[i].move_player(speed, 0)
                     if cmd == "up":    players[i].move_player(0, -speed)
                     if cmd == "down":  players[i].move_player(0, speed)
+
+                    if cmd == "disconnect":
+                        print(f"Player {i} requested disconnect")
+                        alive[i] = False
+                        players[i].bomb = False
+                        players[i].alive = False
+                        print(f"game quit, player disconnected")
+                        time.sleep(0.5)
+                        running = False
+                        client.close()
+                        break
 
                     #collision with walls
                     player_rect = pygame.Rect(players[i].pos[0], players[i].pos[1], 27, 27)    
@@ -130,9 +161,12 @@ while running:
 
                 # print(f"player{i} pos: {players[i].pos}")  # Commented out to stop spam
 
-        except (ConnectionResetError, BrokenPipeError):
+        except Exception as Ex:
             alive[i] = False
             players[i].alive = False
+            print(f"game quit, {Ex}")
+            time.sleep(0.5)
+            running = False
             print(f"Player {i} connection lost")
             # If the disconnected player had the bomb, reassign it
             if players[i].bomb:
@@ -160,9 +194,11 @@ while running:
 
     # Ensure the bomb is always held by someone if there is more than 1 player alive
     if players and not any(p.bomb for p in players.values()) and len(alive_players) > 1:
-        chosen_player = random.choice(list(players.keys()))
-        players[chosen_player].bomb = True
-        print(f"Bomb reassigned to Player {chosen_player} (no one had it)")
+        valid_candidates = [pid for pid, p in players.items() if p.alive]
+        if valid_candidates:
+            chosen_player = random.choice(valid_candidates)
+            players[chosen_player].bomb = True
+            print(f"Bomb reassigned to Player {chosen_player} (no one had it)")
 
     # Check for bomb passing on collision with 1-second cooldown
     if current_time - last_pass_time > 1:
@@ -207,11 +243,12 @@ while running:
                             last_timer_update = time.time()
                             print(f"Bomb reassigned to Player {new_holder}")
                         break
-                
+
+    active_players = {pid: p for pid, p in players.items() if p.alive}
     if winner is None:
-        game_state = pickle.dumps({'players': players, 'timer': bomb_timer, 'game_started': True})
+        game_state = pickle.dumps({'players': active_players, 'timer': bomb_timer, 'game_started': True})
     else:
-        game_state = pickle.dumps({'players': players, 'timer': win_timer, 'winner': winner.name, 'game_started': True})
+        game_state = pickle.dumps({'players': active_players, 'timer': win_timer, 'winner': winner.name, 'game_started': True})
     for i, client in enumerate(clients):
         if alive[i]:
             try:
